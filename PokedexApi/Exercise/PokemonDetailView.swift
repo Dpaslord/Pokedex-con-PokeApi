@@ -6,25 +6,39 @@
 import SwiftUI
 import SDWebImageSwiftUI
 
+/// Vista encargada de mostrar el detalle completo de un Pokémon.
+/// Gestiona estados de carga, error y contenido.
 struct PokemonDetails: View {
+    
+    /// Identificador del Pokémon seleccionado.
     let id: Int
     
+    /// Modelo detallado cargado desde la API.
     @State private var pokemon: ApiNetwork.PokemonDetail? = nil
+    
+    /// Indica si se está realizando la carga.
     @State private var isLoading: Bool = true
+    
+    /// Indica si ocurrió un error durante la carga.
     @State private var hasError: Bool = false
     
     var body: some View {
         ZStack {
             Color.black.ignoresSafeArea()
             
+            // MARK: Estado Loading
+            
             if isLoading {
                 ProgressView("Buscando Pokémon...")
                     .tint(.white)
                     .foregroundColor(.white)
                     .controlSize(.large)
-                
+            
+            // MARK: Estado Error
+            
             } else if hasError {
                 VStack(spacing: 16) {
+                    
                     Image(systemName: "wifi.exclamationmark")
                         .font(.system(size: 60))
                         .foregroundColor(.red)
@@ -38,33 +52,33 @@ struct PokemonDetails: View {
                         .multilineTextAlignment(.center)
                         .padding(.horizontal)
                     
-                    Button(action: {
+                    Button("Reintentar") {
                         Task { await loadPokemon() }
-                    }) {
-                        Text("Reintentar")
-                            .font(.headline)
-                            .foregroundColor(.white)
-                            .padding()
-                            .frame(maxWidth: 200)
-                            .background(Color.blue)
-                            .cornerRadius(12)
                     }
-                    .padding(.top, 10)
+                    .font(.headline)
+                    .foregroundColor(.white)
+                    .padding()
+                    .frame(maxWidth: 200)
+                    .background(Color.blue)
+                    .cornerRadius(12)
                 }
-                
+            
+            // MARK: Estado Contenido
+            
             } else if let pokemon = pokemon {
+                
                 VStack(spacing: 24) {
                     
+                    // Imagen
                     if let spriteUrl = pokemon.sprites.front_default {
                         WebImage(url: URL(string: spriteUrl))
                             .resizable()
                             .indicator(.activity)
                             .scaledToFit()
                             .frame(width: 250, height: 250)
-                            .background(Circle().fill(Color.gray.opacity(0.2)))
-                            .shadow(color: .white.opacity(0.2), radius: 10, x: 0, y: 5)
                     }
                     
+                    // Nombre e ID
                     VStack(spacing: 8) {
                         Text("#\(pokemon.id)")
                             .font(.title2).bold()
@@ -75,10 +89,10 @@ struct PokemonDetails: View {
                             .foregroundColor(.white)
                     }
                     
-                    HStack(spacing: 12) {
+                    // Tipos
+                    HStack {
                         ForEach(pokemon.types, id: \.type.name) { typeSlot in
                             Text(typeSlot.type.name.capitalized)
-                                .font(.headline)
                                 .padding(.horizontal, 20)
                                 .padding(.vertical, 8)
                                 .background(Color.purple.opacity(0.7))
@@ -86,27 +100,6 @@ struct PokemonDetails: View {
                                 .clipShape(Capsule())
                         }
                     }
-                    
-                    HStack(spacing: 60) {
-                        VStack(spacing: 4) {
-                            Text("Altura")
-                                .font(.subheadline)
-                                .foregroundColor(.gray)
-                            Text("\(pokemon.height) dm")
-                                .font(.title3).bold()
-                                .foregroundColor(.white)
-                        }
-                        
-                        VStack(spacing: 4) {
-                            Text("Peso")
-                                .font(.subheadline)
-                                .foregroundColor(.gray)
-                            Text("\(pokemon.weight) hg")
-                                .font(.title3).bold()
-                                .foregroundColor(.white)
-                        }
-                    }
-                    .padding(.top, 16)
                     
                     Spacer()
                 }
@@ -118,7 +111,8 @@ struct PokemonDetails: View {
         }
     }
     
-    // MARK: - Función de llamada con manejo de errores
+    /// Carga el detalle del Pokémon desde la API.
+    /// Gestiona estados de carga y error.
     func loadPokemon() async {
         isLoading = true
         hasError = false
@@ -132,8 +126,4 @@ struct PokemonDetails: View {
             hasError = true
         }
     }
-}
-
-#Preview {
-    PokemonDetails(id: 1)
 }
